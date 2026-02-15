@@ -1,0 +1,40 @@
+name: Deploy Lambda Functions
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+    
+    - name: Deploy File Lister Lambda
+      run: |
+        cd lambdas/file_lister
+        zip -r function.zip handler.py
+        
+        aws lambda update-function-code \
+          --function-name file-lister-lambda \
+          --zip-file fileb://function.zip \
+          || aws lambda create-function \
+          --function-name file-lister-lambda \
+          --runtime python3.11 \
+          --role ${{ secrets.LAMBDA_ROLE_ARN }} \
+          --handler handler.lambda_handler \
+          --zip-file fileb://function.zip \
+          --timeout 60 \
+          --memory-size 256
