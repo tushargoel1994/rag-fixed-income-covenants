@@ -20,7 +20,7 @@ def lambda_handler(event, context):
     
     # Create output content
     output_content = '\n'.join(file_names)
-    timestamp = datetime.strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     output_key = f"{output_prefix}file_list_{timestamp}.txt"
     
     # Upload to S3
