@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  AWS_REGION: us-east-1
+  AWS_REGION: us-east-2
 
 jobs:
   deploy:
@@ -24,7 +24,7 @@ jobs:
     
     - name: Deploy File Lister Lambda
       run: |
-        cd lambdas/file_lister
+        cd src/lambda_functions/s3_file_lister
         zip -r function.zip handler.py
         
         aws lambda update-function-code \

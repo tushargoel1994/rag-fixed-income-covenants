@@ -6,7 +6,7 @@ s3_client = boto3.client('s3')
 
 def lambda_handler(event, context):
     bucket_name = event.get('bucket_name')
-    input_prefix = event.get('input_prefix', 'inputfile/')
+    input_prefix = event.get('input_prefix', 'input_files/')
     output_prefix = event.get('output_prefix', 'output/')
     
     # List all files in input folder
@@ -20,7 +20,7 @@ def lambda_handler(event, context):
     
     # Create output content
     output_content = '\n'.join(file_names)
-    timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.strftime('%Y%m%d_%H%M%S')
     output_key = f"{output_prefix}file_list_{timestamp}.txt"
     
     # Upload to S3
