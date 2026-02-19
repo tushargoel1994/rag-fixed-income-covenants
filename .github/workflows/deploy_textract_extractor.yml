@@ -56,7 +56,7 @@ jobs:
             --function-name textract-extractor-lambda \
             --runtime python3.11 \
             --role ${{ secrets.LAMBDA_TEXT_EXTRACTOR_ROLE }} \
-            --handler handler.handler \
+            --handler textract_extractor.handler.handler \
             --zip-file fileb://textract_extractor_function.zip \
             --timeout 60 \
             --memory-size 256
