@@ -8,10 +8,9 @@ from ..dependencies import dynamodb_operations, s3_operations, sqs_operations, t
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
-def _make_sqs_event(job_id: str, status: str) -> dict:
+def _make_sns_event(job_id: str, status: str) -> dict:
     message = json.dumps({"JobId": job_id, "Status": status})
-    body = json.dumps({"Message": message})
-    return {"Records": [{"body": body}]}
+    return {"Records": [{"Sns": {"Message": message}}]}
 
 
 SAMPLE_BLOCKS = [
@@ -50,18 +49,18 @@ def test_handler_direct_invoke_without_callback(mock_textract, mock_dynamo) -> N
     mock_dynamo.save_job.assert_called_once_with("job-xyz", "my-bucket", "docs/file.pdf", None)
 
 
-# ── Handler: SQS trigger ──────────────────────────────────────────────────────
+# ── Handler: SNS trigger ──────────────────────────────────────────────────────
 
 @patch.object(handler, 'sqs_operations')
 @patch.object(handler, 's3_operations')
 @patch.object(handler, 'dynamodb_operations')
 @patch.object(handler, 'textract_operations')
-def test_handler_sqs_succeeded_with_callback(mock_textract, mock_dynamo, mock_s3, mock_sqs) -> None:
-    """SQS SUCCEEDED event saves text to S3, updates DynamoDB with S3 key, sends callback."""
+def test_handler_sns_succeeded_with_callback(mock_textract, mock_dynamo, mock_s3, mock_sqs) -> None:
+    """SNS SUCCEEDED event saves text to S3, updates DynamoDB with S3 key, sends callback."""
     mock_textract.get_extraction_result.return_value = "Covenant A\nCovenant B"
     mock_s3.save_extracted_text.return_value = "extracted/job-1.txt"
     mock_dynamo.get_job.return_value = {"job_id": "job-1", "callback_queue_url": "https://sqs/cb"}
-    event = _make_sqs_event("job-1", "SUCCEEDED")
+    event = _make_sns_event("job-1", "SUCCEEDED")
 
     result = handler.lambda_handler(event, None)
 
@@ -75,12 +74,12 @@ def test_handler_sqs_succeeded_with_callback(mock_textract, mock_dynamo, mock_s3
 @patch.object(handler, 's3_operations')
 @patch.object(handler, 'dynamodb_operations')
 @patch.object(handler, 'textract_operations')
-def test_handler_sqs_succeeded_without_callback(mock_textract, mock_dynamo, mock_s3, mock_sqs) -> None:
-    """SQS SUCCEEDED event without callback_queue_url skips send_callback."""
+def test_handler_sns_succeeded_without_callback(mock_textract, mock_dynamo, mock_s3, mock_sqs) -> None:
+    """SNS SUCCEEDED event without callback_queue_url skips send_callback."""
     mock_textract.get_extraction_result.return_value = "Some text"
     mock_s3.save_extracted_text.return_value = "extracted/job-2.txt"
     mock_dynamo.get_job.return_value = {"job_id": "job-2"}
-    event = _make_sqs_event("job-2", "SUCCEEDED")
+    event = _make_sns_event("job-2", "SUCCEEDED")
 
     handler.lambda_handler(event, None)
 
@@ -92,9 +91,9 @@ def test_handler_sqs_succeeded_without_callback(mock_textract, mock_dynamo, mock
 @patch.object(handler, 's3_operations')
 @patch.object(handler, 'dynamodb_operations')
 @patch.object(handler, 'textract_operations')
-def test_handler_sqs_failed(mock_textract, mock_dynamo, mock_s3, mock_sqs) -> None:
-    """SQS FAILED event updates DynamoDB with FAILED and no S3 key."""
-    event = _make_sqs_event("job-3", "FAILED")
+def test_handler_sns_failed(mock_textract, mock_dynamo, mock_s3, mock_sqs) -> None:
+    """SNS FAILED event updates DynamoDB with FAILED and no S3 key."""
+    event = _make_sns_event("job-3", "FAILED")
 
     handler.lambda_handler(event, None)
 

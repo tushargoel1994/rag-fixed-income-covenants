@@ -18,7 +18,7 @@ from dependencies.constants import JOB_STATUS_COMPLETED, JOB_STATUS_FAILED
 def lambda_handler(event: Dict, context: Any) -> Optional[Dict]:
     """Route event to start-extraction or result-processing."""
     if "Records" in event:
-        _handle_sqs_event(event)
+        _handle_sns_event(event)
         return None
     return _handle_start_extraction(event)
 
@@ -35,11 +35,10 @@ def _handle_start_extraction(event: Dict) -> Dict:
     return {"job_id": job_id, "status": "SUBMITTED"}
 
 
-def _handle_sqs_event(event: Dict) -> None:
-    """Process Textract completion notifications from SQS."""
+def _handle_sns_event(event: Dict) -> None:
+    """Process Textract completion notifications from SNS."""
     for record in event["Records"]:
-        body = json.loads(record["body"])
-        message = json.loads(body["Message"])
+        message = json.loads(record["Sns"]["Message"])
         _process_textract_notification(message)
 
 
