@@ -10,10 +10,9 @@ Two invocation modes:
 import json
 from typing import Any, Dict, Optional
 
-from .dependencies import dynamodb_operations, s3_operations, sqs_operations
-
-from .dependencies import textract_operations
-from .dependencies.constants import JOB_STATUS_COMPLETED, JOB_STATUS_FAILED
+from dependencies import dynamodb_operations, s3_operations, sqs_operations
+from dependencies import textract_operations
+from dependencies.constants import JOB_STATUS_COMPLETED, JOB_STATUS_FAILED
 
 
 def lambda_handler(event: Dict, context: Any) -> Optional[Dict]:

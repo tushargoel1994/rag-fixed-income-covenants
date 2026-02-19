@@ -3,7 +3,7 @@
 from typing import List, Dict
 import boto3
 
-from .constants import TEXTRACT_SNS_TOPIC_ARN, TEXTRACT_ROLE_ARN, TEXTRACT_MAX_RESULTS
+from dependencies.constants import TEXTRACT_SNS_TOPIC_ARN, TEXTRACT_ROLE_ARN, TEXTRACT_MAX_RESULTS
 
 
 def start_extraction_job(bucket: str, key: str) -> str:

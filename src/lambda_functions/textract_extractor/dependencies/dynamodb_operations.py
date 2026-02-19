@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Dict, Optional
 import boto3
 
-from .constants import DYNAMODB_TABLE_NAME, JOB_STATUS_SUBMITTED
+from dependencies.constants import DYNAMODB_TABLE_NAME, JOB_STATUS_SUBMITTED
 
 
 def save_job(

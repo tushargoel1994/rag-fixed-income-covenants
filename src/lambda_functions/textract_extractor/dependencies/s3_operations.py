@@ -2,7 +2,7 @@
 
 import boto3
 
-from .constants import EXTRACTED_TEXT_PREFIX, OUTPUT_BUCKET
+from dependencies.constants import EXTRACTED_TEXT_PREFIX, OUTPUT_BUCKET
 
 
 def save_extracted_text(job_id: str, text: str) -> str:
