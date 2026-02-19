@@ -1,4 +1,4 @@
-name: Deploy Lambda Functions
+name: Deploy File Lister Lambda Functions
 
 on:
   push:
