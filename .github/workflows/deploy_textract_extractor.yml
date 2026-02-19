@@ -40,11 +40,11 @@ jobs:
         run: |
           mkdir -p deploy
           pip install -r src/lambda_functions/textract_extractor/requirements.txt -t deploy/
-          cp -r src/lambda_functions/textract_extractor deploy/textract_extractor
-          find deploy/textract_extractor -type d -name '__pycache__' | xargs rm -rf
-          find deploy/textract_extractor -name '*.pyc' -delete
-          rm -f deploy/textract_extractor/test_*.py
-          rm -f deploy/textract_extractor/dev.env
+          cp -r src/lambda_functions/textract_extractor/* deploy/
+          # find deploy/ -type d -name '__pycache__' | xargs rm -rf
+          # find deploy/ -name '*.pyc' -delete
+          rm -f deploy/test_*.py
+          rm -f deploy/dev.env
           cd deploy && zip -r ../textract_extractor_function.zip .
 
       - name: Deploy Textract Extractor Lambda
@@ -56,7 +56,7 @@ jobs:
             --function-name textract-extractor-lambda \
             --runtime python3.11 \
             --role ${{ secrets.LAMBDA_TEXT_EXTRACTOR_ROLE }} \
-            --handler textract_extractor.handler.handler \
+            --handler handler.handler \
             --zip-file fileb://textract_extractor_function.zip \
             --timeout 60 \
             --memory-size 256
