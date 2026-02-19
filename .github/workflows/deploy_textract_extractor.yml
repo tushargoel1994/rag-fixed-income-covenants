@@ -15,7 +15,7 @@ on:
 env:
   AWS_REGION: us-east-2
   FUNCTION_NAME: textract-extractor-lambda
-  LAMBDA_HANDLER: textract_extractor.handler.handler
+  LAMBDA_HANDLER: textract_extractor.text_extractor_handler.handler
 
 jobs:
   deploy:
@@ -39,11 +39,12 @@ jobs:
       - name: Build deployment package
         run: |
           mkdir -p deploy
-          pip install -r src/lambda_functions/textract_extractor/requirements.txt -t deploy/
-          cp -r src/lambda_functions/textract_extractor/* deploy/
-          # find deploy/ -type d -name '__pycache__' | xargs rm -rf
-          # find deploy/ -name '*.pyc' -delete
-          rm -f deploy/test_*.py
+          cd deploy
+          # pip install -r src/lambda_functions/textract_extractor/requirements.txt -t deploy/
+          cp -r src/lambda_functions/textract_extractor deploy/
+          find deploy/ -type d -name '__pycache__' | xargs rm -rf
+          find deploy/ -name '*.pyc' -delete
+          rm -r deploy/tests/
           rm -f deploy/dev.env
           cd deploy && zip -r ../textract_extractor_function.zip .
 
@@ -56,7 +57,7 @@ jobs:
             --function-name textract-extractor-lambda \
             --runtime python3.11 \
             --role ${{ secrets.LAMBDA_TEXT_EXTRACTOR_ROLE }} \
-            --handler handler.handler \
+            --handler text_extractor_handler.handler \
             --zip-file fileb://textract_extractor_function.zip \
             --timeout 60 \
             --memory-size 256
