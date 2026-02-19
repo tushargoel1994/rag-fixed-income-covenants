@@ -47,19 +47,14 @@ jobs:
 
       - name: Deploy Textract Extractor Lambda
         run: |
-          if aws lambda update-function-code \
+          aws lambda update-function-code \
             --function-name textract-extractor-lambda \
-            --zip-file fileb://textract_extractor_function.zip; then
-            aws lambda update-function-configuration \
-              --function-name textract-extractor-lambda \
-              --handler handler.lambda_handler
-          else
-            aws lambda create-function \
-              --function-name textract-extractor-lambda \
-              --runtime python3.11 \
-              --role ${{ secrets.LAMBDA_TEXT_EXTRACTOR_ROLE }} \
-              --handler handler.lambda_handler \
-              --zip-file fileb://textract_extractor_function.zip \
-              --timeout 60 \
-              --memory-size 256
-          fi
+            --zip-file fileb://textract_extractor_function.zip \
+            || aws lambda create-function \
+            --function-name textract-extractor-lambda \
+            --runtime python3.11 \
+            --role ${{ secrets.LAMBDA_TEXT_EXTRACTOR_ROLE }} \
+            --handler handler.lambda_handler \
+            --zip-file fileb://textract_extractor_function.zip \
+            --timeout 60 \
+            --memory-size 256
