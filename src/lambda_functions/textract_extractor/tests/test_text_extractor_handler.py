@@ -3,7 +3,7 @@
 import json
 from unittest.mock import MagicMock, patch
 
-from .. import text_extractor_handler
+from .. import handler
 from ..dependencies import dynamodb_operations, s3_operations, sqs_operations, textract_operations
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -23,28 +23,28 @@ SAMPLE_BLOCKS = [
 
 # ── Handler: direct invoke ────────────────────────────────────────────────────
 
-@patch.object(text_extractor_handler, 'dynamodb_operations')
-@patch.object(text_extractor_handler, 'textract_operations')
+@patch.object(handler, 'dynamodb_operations')
+@patch.object(handler, 'textract_operations')
 def test_handler_direct_invoke_returns_job_id(mock_textract, mock_dynamo) -> None:
     """Direct invoke returns job_id and SUBMITTED status."""
     mock_textract.start_extraction_job.return_value = "job-abc"
     event = {"bucket": "my-bucket", "key": "docs/file.pdf", "callback_queue_url": "https://sqs/queue"}
 
-    result = text_extractor_handler.handler(event, None)
+    result = handler.lambda_handler(event, None)
 
     assert result == {"job_id": "job-abc", "status": "SUBMITTED"}
     mock_textract.start_extraction_job.assert_called_once_with("my-bucket", "docs/file.pdf")
     mock_dynamo.save_job.assert_called_once_with("job-abc", "my-bucket", "docs/file.pdf", "https://sqs/queue")
 
 
-@patch.object(text_extractor_handler, 'dynamodb_operations')
-@patch.object(text_extractor_handler, 'textract_operations')
+@patch.object(handler, 'dynamodb_operations')
+@patch.object(handler, 'textract_operations')
 def test_handler_direct_invoke_without_callback(mock_textract, mock_dynamo) -> None:
     """Direct invoke without callback_queue_url passes None to save_job."""
     mock_textract.start_extraction_job.return_value = "job-xyz"
     event = {"bucket": "my-bucket", "key": "docs/file.pdf"}
 
-    result = text_extractor_handler.handler(event, None)
+    result = handler.lambda_handler(event, None)
 
     assert result["job_id"] == "job-xyz"
     mock_dynamo.save_job.assert_called_once_with("job-xyz", "my-bucket", "docs/file.pdf", None)
@@ -52,10 +52,10 @@ def test_handler_direct_invoke_without_callback(mock_textract, mock_dynamo) -> N
 
 # ── Handler: SQS trigger ──────────────────────────────────────────────────────
 
-@patch.object(text_extractor_handler, 'sqs_operations')
-@patch.object(text_extractor_handler, 's3_operations')
-@patch.object(text_extractor_handler, 'dynamodb_operations')
-@patch.object(text_extractor_handler, 'textract_operations')
+@patch.object(handler, 'sqs_operations')
+@patch.object(handler, 's3_operations')
+@patch.object(handler, 'dynamodb_operations')
+@patch.object(handler, 'textract_operations')
 def test_handler_sqs_succeeded_with_callback(mock_textract, mock_dynamo, mock_s3, mock_sqs) -> None:
     """SQS SUCCEEDED event saves text to S3, updates DynamoDB with S3 key, sends callback."""
     mock_textract.get_extraction_result.return_value = "Covenant A\nCovenant B"
@@ -63,7 +63,7 @@ def test_handler_sqs_succeeded_with_callback(mock_textract, mock_dynamo, mock_s3
     mock_dynamo.get_job.return_value = {"job_id": "job-1", "callback_queue_url": "https://sqs/cb"}
     event = _make_sqs_event("job-1", "SUCCEEDED")
 
-    result = text_extractor_handler.handler(event, None)
+    result = handler.lambda_handler(event, None)
 
     assert result is None
     mock_s3.save_extracted_text.assert_called_once_with("job-1", "Covenant A\nCovenant B")
@@ -71,10 +71,10 @@ def test_handler_sqs_succeeded_with_callback(mock_textract, mock_dynamo, mock_s3
     mock_sqs.send_callback.assert_called_once_with("https://sqs/cb", "job-1", "extracted/job-1.txt")
 
 
-@patch.object(text_extractor_handler, 'sqs_operations')
-@patch.object(text_extractor_handler, 's3_operations')
-@patch.object(text_extractor_handler, 'dynamodb_operations')
-@patch.object(text_extractor_handler, 'textract_operations')
+@patch.object(handler, 'sqs_operations')
+@patch.object(handler, 's3_operations')
+@patch.object(handler, 'dynamodb_operations')
+@patch.object(handler, 'textract_operations')
 def test_handler_sqs_succeeded_without_callback(mock_textract, mock_dynamo, mock_s3, mock_sqs) -> None:
     """SQS SUCCEEDED event without callback_queue_url skips send_callback."""
     mock_textract.get_extraction_result.return_value = "Some text"
@@ -82,21 +82,21 @@ def test_handler_sqs_succeeded_without_callback(mock_textract, mock_dynamo, mock
     mock_dynamo.get_job.return_value = {"job_id": "job-2"}
     event = _make_sqs_event("job-2", "SUCCEEDED")
 
-    text_extractor_handler.handler(event, None)
+    handler.lambda_handler(event, None)
 
     mock_s3.save_extracted_text.assert_called_once()
     mock_sqs.send_callback.assert_not_called()
 
 
-@patch.object(text_extractor_handler, 'sqs_operations')
-@patch.object(text_extractor_handler, 's3_operations')
-@patch.object(text_extractor_handler, 'dynamodb_operations')
-@patch.object(text_extractor_handler, 'textract_operations')
+@patch.object(handler, 'sqs_operations')
+@patch.object(handler, 's3_operations')
+@patch.object(handler, 'dynamodb_operations')
+@patch.object(handler, 'textract_operations')
 def test_handler_sqs_failed(mock_textract, mock_dynamo, mock_s3, mock_sqs) -> None:
     """SQS FAILED event updates DynamoDB with FAILED and no S3 key."""
     event = _make_sqs_event("job-3", "FAILED")
 
-    text_extractor_handler.handler(event, None)
+    handler.lambda_handler(event, None)
 
     mock_dynamo.update_job_result.assert_called_once_with("job-3", None, "FAILED")
     mock_s3.save_extracted_text.assert_not_called()

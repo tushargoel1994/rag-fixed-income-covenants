@@ -14,8 +14,6 @@ on:
 
 env:
   AWS_REGION: us-east-2
-  FUNCTION_NAME: textract-extractor-lambda
-  LAMBDA_HANDLER: textract_extractor.text_extractor_handler.handler
 
 jobs:
   deploy:
@@ -56,7 +54,7 @@ jobs:
             --function-name textract-extractor-lambda \
             --runtime python3.11 \
             --role ${{ secrets.LAMBDA_TEXT_EXTRACTOR_ROLE }} \
-            --handler text_extractor_handler.handler \
+            --handler handler.lambda_handler \
             --zip-file fileb://textract_extractor_function.zip \
             --timeout 60 \
             --memory-size 256

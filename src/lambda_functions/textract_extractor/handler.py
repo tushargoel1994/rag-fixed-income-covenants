@@ -16,7 +16,7 @@ from .dependencies import textract_operations
 from .dependencies.constants import JOB_STATUS_COMPLETED, JOB_STATUS_FAILED
 
 
-def handler(event: Dict, context: Any) -> Optional[Dict]:
+def lambda_handler(event: Dict, context: Any) -> Optional[Dict]:
     """Route event to start-extraction or result-processing."""
     if "Records" in event:
         _handle_sqs_event(event)
