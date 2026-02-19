@@ -1,6 +1,11 @@
 name: Deploy Textract Extractor Lambda
 
 on:
+  # pull_request:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - 'src/lambda_functions/textract_extractor/**'
   push:
     branches: [main]
     paths:
@@ -39,20 +44,22 @@ jobs:
           find deploy/textract_extractor -type d -name '__pycache__' | xargs rm -rf
           find deploy/textract_extractor -name '*.pyc' -delete
           rm -f deploy/textract_extractor/test_*.py
-          rm -f deploy/textract_extractor/conftest.py
           rm -f deploy/textract_extractor/dev.env
           cd deploy && zip -r ../function.zip .
 
       - name: Deploy Textract Extractor Lambda
-        run: |
+        run:
+          cd src/lambda_functions/textract_extractor
+          zip -r function.zip handler.py
+
           aws lambda update-function-code \
-            --function-name ${{ env.FUNCTION_NAME }} \
+            --function-name textract-extractor-lambda \
             --zip-file fileb://function.zip \
-          || aws lambda create-function \
-            --function-name ${{ env.FUNCTION_NAME }} \
+            || aws lambda create-function \
+            --function-name textract-extractor-lambda \
             --runtime python3.11 \
-            --role ${{ secrets.LAMBDA_TEXT_EXTRACTOR_ROLE }} \
-            --handler ${{ env.LAMBDA_HANDLER }} \
+            --role ${{ secrets.}} \
+            --handler handler.handler \
             --zip-file fileb://function.zip \
             --timeout 60 \
-            --memory-size 256
+            --memory-size 512
