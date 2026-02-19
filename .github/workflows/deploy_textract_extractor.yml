@@ -39,12 +39,11 @@ jobs:
       - name: Build deployment package
         run: |
           mkdir -p deploy
-          cd deploy
-          # pip install -r src/lambda_functions/textract_extractor/requirements.txt -t deploy/
+          pip install -r src/lambda_functions/textract_extractor/requirements.txt -t deploy/
           cp -r src/lambda_functions/textract_extractor/* deploy/
           find deploy/ -type d -name '__pycache__' | xargs rm -rf
           find deploy/ -name '*.pyc' -delete
-          rm -r deploy/tests/
+          rm -rf deploy/tests/
           rm -f deploy/dev.env
           cd deploy && zip -r ../textract_extractor_function.zip .
 
