@@ -3,6 +3,8 @@ name: Deploy File Lister Lambda Functions
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'src/lambda_functions/s3_file_lister/**'
   workflow_dispatch:
 
 env:

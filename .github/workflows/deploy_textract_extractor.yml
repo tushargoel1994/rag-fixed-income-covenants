@@ -36,20 +36,22 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Build deployment package
-        run: |
-          mkdir -p deploy
-          pip install -r src/lambda_functions/textract_extractor/requirements.txt -t deploy/
-          cp -r src/lambda_functions/textract_extractor deploy/textract_extractor
-          find deploy/textract_extractor -type d -name '__pycache__' | xargs rm -rf
-          find deploy/textract_extractor -name '*.pyc' -delete
-          rm -f deploy/textract_extractor/test_*.py
-          rm -f deploy/textract_extractor/dev.env
-          cd deploy && zip -r ../function.zip .
+      # - name: Build deployment package
+      #   run: |
+      #     mkdir -p deploy
+      #     pip install -r src/lambda_functions/textract_extractor/requirements.txt -t deploy/
+      #     cp -r src/lambda_functions/textract_extractor deploy/textract_extractor
+      #     find deploy/textract_extractor -type d -name '__pycache__' | xargs rm -rf
+      #     find deploy/textract_extractor -name '*.pyc' -delete
+      #     rm -f deploy/textract_extractor/test_*.py
+      #     rm -f deploy/textract_extractor/dev.env
+      #     cd deploy && zip -r ../function.zip .
 
       - name: Deploy Textract Extractor Lambda
-        run:
+        run: |
           cd src/lambda_functions/textract_extractor
+          rm -f deploy/textract_extractor/test_*.py
+          rm -f deploy/textract_extractor/dev.env
           zip -r function.zip handler.py
 
           aws lambda update-function-code \
@@ -58,7 +60,7 @@ jobs:
             || aws lambda create-function \
             --function-name textract-extractor-lambda \
             --runtime python3.11 \
-            --role ${{ secrets.}} \
+            --role ${{ secrets.LAMBDA_TEXT_EXTRACTOR_ROLE }} \
             --handler handler.handler \
             --zip-file fileb://function.zip \
             --timeout 60 \
