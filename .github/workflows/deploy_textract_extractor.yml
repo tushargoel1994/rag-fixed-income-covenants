@@ -1,6 +1,11 @@
 name: Deploy Textract Extractor Lambda
 
 on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'src/lambda_functions/textract_extractor/**'
   push:
     branches: [main]
     paths:
